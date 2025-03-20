@@ -1,1 +1,174 @@
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'Grade Calculator',
+      theme: ThemeData(
+        useMaterial3: true,
+        scaffoldBackgroundColor: Colors.white,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.white,
+          elevation: 0,
+        ),
+      ),
+      home: const GradeCalculator(),
+    );
+  }
+}
+
+class GradeCalculator extends StatefulWidget {
+  const GradeCalculator({super.key});
+
+  @override
+  State<GradeCalculator> createState() => _GradeCalculatorState();
+}
+
+class _GradeCalculatorState extends State<GradeCalculator> {
+  final _formKey = GlobalKey<FormState>();
+  double _assignmentMarks = 0;
+  double _testMarks = 0;
+  double _finalExamMarks = 0;
+  double _finalGrade = 0;
+  bool _calculated = false;
+
+  void _calculateGrade() {
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+      setState(() {
+        _finalGrade = (_assignmentMarks * 0.3) +
+            (_testMarks * 0.3) +
+            (_finalExamMarks * 0.4);
+        _calculated = true;
+      });
+    }
+  }
+
+  void _resetForm() {
+    _formKey.currentState?.reset();
+    setState(() {
+      _assignmentMarks = 0;
+      _testMarks = 0;
+      _finalExamMarks = 0;
+      _finalGrade = 0;
+      _calculated = false;
+    });
+  }
+
+  String? _validateMarks(String? value) {
+    if (value == null || value.isEmpty) return 'Required';
+    final marks = double.tryParse(value);
+    if (marks == null) return 'Invalid';
+    if (marks < 0 || marks > 100) return '0-100';
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'Grade Calculator',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        centerTitle: true,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              _buildInputField(
+                label: 'Assignment (30%)',
+                onSaved: (v) => _assignmentMarks = double.parse(v!),
+              ),
+              const SizedBox(height: 16),
+              _buildInputField(
+                label: 'Test (30%)',
+                onSaved: (v) => _testMarks = double.parse(v!),
+              ),
+              const SizedBox(height: 16),
+              _buildInputField(
+                label: 'Final Exam (40%)',
+                onSaved: (v) => _finalExamMarks = double.parse(v!),
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: _calculateGrade,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.black87,
+                    padding: const EdgeInsets.symmetric(vertical: 15),
+                  ),
+                  child: const Text(
+                    'Calculate',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: _resetForm,
+                child: const Text(
+                  'Reset',
+                  style: TextStyle(color: Colors.black54),
+                ),
+              ),
+              if (_calculated) ...[
+                const SizedBox(height: 40),
+                Text(
+                  '${_finalGrade.toStringAsFixed(1)}%',
+                  style: const TextStyle(
+                    fontSize: 48,
+                    fontWeight: FontWeight.w300,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _finalGrade > 50 ? 'PASS' : 'FAIL',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: _finalGrade > 50 ? Colors.green[700] : Colors.red[700],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInputField({
+    required String label,
+    required void Function(String?) onSaved,
+  }) {
+    return TextFormField(
+      decoration: InputDecoration(
+        labelText: label,
+        floatingLabelBehavior: FloatingLabelBehavior.auto,
+        border: const UnderlineInputBorder(),
+        contentPadding: const EdgeInsets.symmetric(vertical: 8),
+      ),
+      style: const TextStyle(fontSize: 16),
+      keyboardType: TextInputType.number,
+      validator: _validateMarks,
+      onSaved: onSaved,
+    );
+  }
+}
 
